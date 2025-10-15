@@ -2,9 +2,11 @@ package com.example.user_service.services;
 
 import com.example.user_service.dtos.UserDTO;
 import com.example.user_service.entities.User;
+import com.example.user_service.events.UserEventPublisher;
 import com.example.user_service.mappers.UserMapper;
 import com.example.user_service.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 public class UserService {
 
 	private final UserRepository userRepository;
+	@Autowired
+	private UserEventPublisher userEventPublisher;
 
 	public UserService(UserRepository userRepository) {
 		this.userRepository = userRepository;
@@ -32,9 +36,15 @@ public class UserService {
 		return UserMapper.toDTO(user);
 	}
 
+	/*public UserDTO createUser(UserDTO dto) {
+		User user = UserMapper.toEntity(dto);
+		User saved = userRepository.save(user);
+		return UserMapper.toDTO(saved);
+	}*/
 	public UserDTO createUser(UserDTO dto) {
 		User user = UserMapper.toEntity(dto);
 		User saved = userRepository.save(user);
+		userEventPublisher.publishUserCreatedEvent(saved.getId().toString(), saved.getEmail());
 		return UserMapper.toDTO(saved);
 	}
 
