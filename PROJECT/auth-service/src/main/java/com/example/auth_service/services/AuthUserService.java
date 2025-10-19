@@ -1,6 +1,8 @@
 package com.example.auth_service.services;
 
 import com.example.auth_service.dtos.AuthUserDTO;
+import com.example.auth_service.dtos.LoginRequestDTO;
+import com.example.auth_service.dtos.LoginResponseDTO;
 import com.example.auth_service.entities.AuthUser;
 import com.example.auth_service.mappers.AuthUserMapper;
 import com.example.auth_service.repositories.AuthUserRepository;
@@ -62,5 +64,23 @@ public class AuthUserService {
 			throw new RuntimeException("User not found with id: " + id);
 		}
 		repository.deleteById(id);
+	}
+
+	public LoginResponseDTO login(LoginRequestDTO request) {
+		AuthUser user = repository.findByEmail(request.getEmail())
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		boolean matches = passwordEncoder.matches(request.getPassword(), user.getPassword());
+		if (!matches) {
+			throw new RuntimeException("Invalid password");
+		}
+
+		return new LoginResponseDTO(
+				user.getId(),
+				user.getEmail(),
+				user.getRole(),
+				user.isActive(),
+				"Login successful"
+		);
 	}
 }

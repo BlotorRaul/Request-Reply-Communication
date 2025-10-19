@@ -1,6 +1,8 @@
 package com.example.auth_service.controllers;
 
 import com.example.auth_service.dtos.AuthUserDTO;
+import com.example.auth_service.dtos.LoginRequestDTO;
+import com.example.auth_service.dtos.LoginResponseDTO;
 import com.example.auth_service.services.AuthUserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,5 +42,9 @@ public class AuthController {
 	@DeleteMapping("/{id}")
 	public void deleteUser(@PathVariable UUID id) {
 		service.deleteUser(id);
+	}
+	@PostMapping("/login")
+	public LoginResponseDTO login(@RequestBody LoginRequestDTO request) {
+		return service.login(request);
 	}
 }
