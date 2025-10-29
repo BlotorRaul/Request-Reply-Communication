@@ -1,0 +1,100 @@
+{
+  "info": {
+    "name": "User Service CRUD",
+    "_postman_id": "c2f1f7a0-9a8b-4e3a-8c1a-1fdfb14d7e11",
+    "description": "CRUD collection for the user-service microservice running on port 8081",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+40741111222\",\n  \"address\": \"Str. Republicii 12\",\n  \"city\": \"Cluj-Napoca\",\n  \"country\": \"Romania\",\n  \"department\": \"QA\",\n  \"jobTitle\": \"Automation Engineer\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "users"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Users",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8081/api/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "users"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User by ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8081/api/users/{{userId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "users", "{{userId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update User",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe Updated\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+40741111333\",\n  \"address\": \"Str. Memorandumului 45\",\n  \"city\": \"Cluj-Napoca\",\n  \"country\": \"Romania\",\n  \"department\": \"QA\",\n  \"jobTitle\": \"Senior QA Engineer\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/users/{{userId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "users", "{{userId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete User",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:8081/api/users/{{userId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "users", "{{userId}}"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "userId",
+      "value": "replace-with-valid-uuid"
+    }
+  ]
+}

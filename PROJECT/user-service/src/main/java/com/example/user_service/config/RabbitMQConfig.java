@@ -1,6 +1,6 @@
-package com.example.device_service.config;
+package com.example.user_service.config;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -10,36 +10,21 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // Trebuie sa fie aceleasi ca in user-service
     public static final String EXCHANGE = "user.exchange";
-    public static final String QUEUE = "device.user.queue";
     public static final String ROUTING_KEY = "user.events";
 
-    // Declaram coada — persistenta (ramane dupa restart)
-    @Bean
-    public Queue queue() {
-        return new Queue(QUEUE, true);
-    }
-
-    // Declaram exchange-ul (de tip Topic)
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(EXCHANGE);
     }
 
-    // Legam queue-ul de exchange prin routing key
-    @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
-    }
-
-    // Convertorul JSON (obligatoriu pentru producție)
+    // Convertor JSON — trimite mesajele in format JSON
     @Bean
     public Jackson2JsonMessageConverter jacksonConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
-    // RabbitTemplate cu suport pentru JSON
+    // RabbitTemplate care foloseste convertorul JSON
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);

@@ -2,8 +2,10 @@ package com.example.device_service.services;
 
 import com.example.device_service.dtos.DeviceDTO;
 import com.example.device_service.entities.Device;
+import com.example.device_service.entities.UserLocal;
 import com.example.device_service.mappers.DeviceMapper;
 import com.example.device_service.repositories.DeviceRepository;
+import com.example.device_service.repositories.UserLocalRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,11 +15,13 @@ import java.util.stream.Collectors;
 @Service
 public class DeviceService {
 
-	private final DeviceRepository deviceRepository;
+    private final DeviceRepository deviceRepository;
+    private final UserLocalRepository userLocalRepository;
 
-	public DeviceService(DeviceRepository deviceRepository) {
-		this.deviceRepository = deviceRepository;
-	}
+    public DeviceService(DeviceRepository deviceRepository, UserLocalRepository userLocalRepository) {
+        this.deviceRepository = deviceRepository;
+        this.userLocalRepository = userLocalRepository;
+    }
 
 	public List<DeviceDTO> getAllDevices() {
 		return deviceRepository.findAll()
@@ -76,4 +80,37 @@ public class DeviceService {
 				.map(DeviceMapper::toDTO)
 				.collect(Collectors.toList());
 	}
+    public DeviceDTO assignUserToDevice(UUID deviceId, UUID userId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
+
+        // Verifica dacă userul exista in users_local
+        UserLocal user = userLocalRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found locally: " + userId));
+
+        // Daca userul este inactiv, aruncam eroare controlata
+        if (!user.isActive()) {
+            throw new IllegalStateException("User " + user.getFullName() + " is inactive and cannot be assigned a device.");
+        }
+
+        // Asociem device-ul
+        device.setUserId(userId);
+        Device updated = deviceRepository.save(device);
+
+        System.out.println("Device " + device.getName() + " assigned to active user " + user.getFullName());
+        return DeviceMapper.toDTO(updated);
+    }
+
+
+    public DeviceDTO unassignUserFromDevice(UUID deviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
+
+        device.setUserId(null);
+        Device updated = deviceRepository.save(device);
+        System.out.println("Device " + device.getName() + " unassigned from user");
+
+        return DeviceMapper.toDTO(updated);
+    }
+
 }

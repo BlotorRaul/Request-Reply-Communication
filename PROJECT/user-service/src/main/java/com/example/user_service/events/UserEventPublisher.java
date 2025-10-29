@@ -1,34 +1,22 @@
 package com.example.user_service.events;
 
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.Map;
+import static com.example.user_service.config.RabbitMQConfig.*;
 
 @Component
 public class UserEventPublisher {
 
-	private final AmqpTemplate amqpTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
-	@Value("${app.rabbitmq.exchange}")
-	private String exchange;
+    public UserEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
-	@Value("${app.rabbitmq.routingKey}")
-	private String routingKey;
+    public void publishUserEvent(String event, String userId, String fullName, String email, boolean active) {
+        UserEventMessage message = new UserEventMessage(event, userId, fullName, email, active);
 
-	public UserEventPublisher(AmqpTemplate amqpTemplate) {
-		this.amqpTemplate = amqpTemplate;
-	}
-
-	public void publishUserCreatedEvent(String userId, String email) {
-		Map<String, Object> message = new HashMap<>();
-		message.put("event", "USER_CREATED");
-		message.put("userId", userId);
-		message.put("email", email);
-		//trimite mesajul message catre exchange-ul user.exchange folosind eticheta user.created
-		amqpTemplate.convertAndSend(exchange, routingKey, message);
-		System.out.println("Sent USER_CREATED event for userId = " + userId);
-	}
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, message);
+        System.out.println("Sent user event to RabbitMQ: " + message);
+    }
 }

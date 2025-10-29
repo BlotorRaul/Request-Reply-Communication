@@ -17,10 +17,11 @@ import java.util.stream.Collectors;
 public class UserService {
 
 	private final UserRepository userRepository;
-	@Autowired
-	private UserEventPublisher userEventPublisher;
+    @Autowired
+    private UserEventPublisher publisher;
 
-	public UserService(UserRepository userRepository) {
+
+    public UserService(UserRepository userRepository) {
 		this.userRepository = userRepository;
 	}
 	public List<UserDTO> getAllUsers() {
@@ -41,14 +42,27 @@ public class UserService {
 		User saved = userRepository.save(user);
 		return UserMapper.toDTO(saved);
 	}*/
-	public UserDTO createUser(UserDTO dto) {
-		User user = UserMapper.toEntity(dto);
-		User saved = userRepository.save(user);
-		userEventPublisher.publishUserCreatedEvent(saved.getId().toString(), saved.getEmail());
-		return UserMapper.toDTO(saved);
-	}
+    public UserDTO createUser(UserDTO dto) {
+        User user = UserMapper.toEntity(dto);
+        User saved = userRepository.save(user);
 
-	public UserDTO updateUser(UUID id, UserDTO dto) {
+        //  Construim fullName din prenume + nume
+        String fullName = saved.getFirstName() + " " + saved.getLastName();
+
+        //  Trimitem eventul USER_CREATED
+        publisher.publishUserEvent(
+                "USER_CREATED",
+                saved.getId().toString(),
+                fullName,
+                saved.getEmail(),
+                saved.getActive()
+        );
+
+        return UserMapper.toDTO(saved);
+    }
+
+
+    public UserDTO updateUser(UUID id, UserDTO dto) {
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
@@ -64,6 +78,17 @@ public class UserService {
 		user.setActive(dto.getActive());
 
 		User updated = userRepository.save(user);
+
+        //  Trimitem eventul USER_UPDATED
+        String fullName = updated.getFirstName() + " " + updated.getLastName();
+        publisher.publishUserEvent(
+                "USER_UPDATED",
+                updated.getId().toString(),
+                fullName,
+                updated.getEmail(),
+                updated.getActive()
+        );
+
 		return UserMapper.toDTO(updated);
 	}
 
@@ -72,5 +97,14 @@ public class UserService {
 			throw new RuntimeException("User not found with id: " + id);
 		}
 		userRepository.deleteById(id);
+
+        //  Trimitem eventul USER_DELETED
+        publisher.publishUserEvent(
+                "USER_DELETED",
+                id.toString(),
+                null,
+                null,
+                false
+        );
 	}
 }

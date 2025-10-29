@@ -1,0 +1,126 @@
+{
+  "info": {
+    "name": "Device Service CRUD",
+    "_postman_id": "e2a1d930-cf42-41b1-b7d1-5b55a743eac1",
+    "description": "CRUD collection for device-service microservice on port 8082",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Device",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Laptop Lenovo\",\n  \"type\": \"Laptop\",\n  \"status\": \"ACTIVE\",\n  \"userId\": null\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/api/devices",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Devices",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8082/api/devices",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Device by ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8082/api/devices/{{deviceId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices", "{{deviceId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Device",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Laptop Lenovo X1\",\n  \"type\": \"Laptop\",\n  \"status\": \"ACTIVE\",\n  \"userId\": \"{{userId}}\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/api/devices/{{deviceId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices", "{{deviceId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Device",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:8082/api/devices/{{deviceId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices", "{{deviceId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Assign Device to User",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "http://localhost:8082/api/devices/{{deviceId}}/assign/{{userId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices", "{{deviceId}}", "assign", "{{userId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Devices by User ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8082/api/devices/user/{{userId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["api", "devices", "user", "{{userId}}"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    { "key": "deviceId", "value": "replace-with-valid-device-uuid" },
+    { "key": "userId", "value": "replace-with-valid-user-uuid" }
+  ]
+}

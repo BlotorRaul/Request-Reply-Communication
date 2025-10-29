@@ -10,6 +10,7 @@ public class LoginResponseDTO {
 	private boolean active;
 	private String message;
 
+
 	public LoginResponseDTO() {}
 
 	public LoginResponseDTO(UUID id, String email, String role, boolean active, String message) {

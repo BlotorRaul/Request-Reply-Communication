@@ -7,6 +7,7 @@ import com.example.auth_service.entities.AuthUser;
 import com.example.auth_service.mappers.AuthUserMapper;
 import com.example.auth_service.repositories.AuthUserRepository;
 
+import com.example.auth_service.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +18,15 @@ import java.util.stream.Collectors;
 @Service
 public class AuthUserService {
 
-	private final AuthUserRepository repository;
-	private final PasswordEncoder passwordEncoder;
+    private final AuthUserRepository repository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-	public AuthUserService(AuthUserRepository repository, PasswordEncoder passwordEncoder) {
-		this.repository = repository;
-		this.passwordEncoder = passwordEncoder;
-	}
+    public AuthUserService(AuthUserRepository repository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
 
 
 	public List<AuthUserDTO> getAllUsers() {
@@ -66,21 +69,27 @@ public class AuthUserService {
 		repository.deleteById(id);
 	}
 
-	public LoginResponseDTO login(LoginRequestDTO request) {
-		AuthUser user = repository.findByEmail(request.getEmail())
-				.orElseThrow(() -> new RuntimeException("User not found"));
+    public LoginResponseDTO login(LoginRequestDTO request) {
+        AuthUser user = repository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		boolean matches = passwordEncoder.matches(request.getPassword(), user.getPassword());
-		if (!matches) {
-			throw new RuntimeException("Invalid password");
-		}
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
 
-		return new LoginResponseDTO(
-				user.getId(),
-				user.getEmail(),
-				user.getRole(),
-				user.isActive(),
-				"Login successful"
-		);
-	}
+        if (!user.isActive()) {
+            throw new RuntimeException("User is inactive");
+        }
+
+        // JWT token generat
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId().toString());
+
+        return new LoginResponseDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getRole(),
+                user.isActive(),
+                token
+        );
+    }
 }
