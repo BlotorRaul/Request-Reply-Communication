@@ -1,0 +1,45 @@
+http:
+  routers:
+    # --- AUTH SERVICE ---
+    auth-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/auth`)"
+      entryPoints:
+        - web
+      service: auth-service
+
+    # --- USER SERVICE ---
+    user-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/users`)"
+      entryPoints:
+        - web
+      service: user-service
+
+    # --- DEVICE SERVICE ---
+    device-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/devices`)"
+      entryPoints:
+        - web
+      service: device-service
+
+    # --- USER-LOCAL ENDPOINTS ---
+    userlocal-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/users-local`)"
+      entryPoints:
+        - web
+      service: device-service
+
+  services:
+    auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.232:8083/"
+
+    user-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.232:8081/"
+
+    device-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.232:8082/"

@@ -5,7 +5,10 @@ import com.example.auth_service.security.JwtAuthFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +30,14 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+    /**
+     * ✅ Bean necesar pentru AuthValidationController
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         System.out.println("Auth mode: " + authMode.toUpperCase());
@@ -34,20 +45,19 @@ public class SecurityConfig {
 
         switch (authMode.toLowerCase()) {
             case "basic" -> {
-                System.out.println("BASIC Authentication ENABLED (DB-based)");
+                System.out.println("🔐 BASIC Authentication ENABLED (DB-based)");
                 http
                         .authorizeHttpRequests(auth -> auth
-                                //Permitem accesul la Swagger fara autentificare
+                                // Permitem accesul la Swagger și la login/validate fără autentificare
                                 .requestMatchers(
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
-                                        "/swagger-ui.html"
+                                        "/swagger-ui.html",
+                                        "/api/auth/users/login",
+                                        "/api/auth/validate-basic"
                                 ).permitAll()
 
-                                // Login endpoint e public
-                                .requestMatchers("/api/auth/users/login").permitAll()
-
-                                // restul trebuie autentificat
+                                // Orice alt request necesită autentificare
                                 .anyRequest().authenticated()
                         )
                         .userDetailsService(customUserDetailsService)
@@ -55,25 +65,17 @@ public class SecurityConfig {
             }
 
             case "jwt" -> {
-                System.out.println("JWT Authentication ENABLED");
+                System.out.println("🔑 JWT Authentication ENABLED");
                 http
                         .authorizeHttpRequests(auth -> auth
-                                //Permitem accesul la Swagger fara autentificare
                                 .requestMatchers(
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
-                                        "/swagger-ui.html"
+                                        "/swagger-ui.html",
+                                        "/api/auth/users/login"
                                 ).permitAll()
-
-                                // Login este public
-                                .requestMatchers("/api/auth/users/login").permitAll()
-
-                                //  doar USER are acces la acest endpoint
                                 .requestMatchers("/api/auth/users/test-user").hasRole("USER")
-
-                                // doar ADMIN are acces la celelalte endpointuri
                                 .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
-
                                 .anyRequest().authenticated()
                         )
                         .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -82,7 +84,7 @@ public class SecurityConfig {
             }
 
             default -> {
-                System.out.println("Authentication DISABLED (permitAll)");
+                System.out.println("🚪 Authentication DISABLED (permitAll)");
                 http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             }
         }
