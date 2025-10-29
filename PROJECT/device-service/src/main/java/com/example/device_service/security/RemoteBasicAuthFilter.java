@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -47,25 +49,30 @@ public class RemoteBasicAuthFilter implements Filter {
 
             if (resp.getStatusCode().is2xxSuccessful() && Boolean.TRUE.equals(resp.getBody().get("valid"))) {
 
-                // Extragem username și rol (opțional)
                 String username = (String) resp.getBody().get("username");
-                String role = resp.getBody().get("roles") != null
-                        ? resp.getBody().get("roles").toString()
-                        : "USER";
 
-                // Construim obiectul de autentificare
+                //  Extragem lista reala de roluri din auth-service
+                Object rolesObj = resp.getBody().get("roles");
+                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+                if (rolesObj instanceof List<?> rolesList) {
+                    for (Object r : rolesList) {
+                        authorities.add(new SimpleGrantedAuthority(r.toString()));
+                    }
+                } else if (rolesObj != null) {
+                    authorities.add(new SimpleGrantedAuthority(rolesObj.toString()));
+                } else {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                }
+
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                Collections.singleton(new SimpleGrantedAuthority(role))
-                        );
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
 
-                // Setam in contextul de securitate
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 chain.doFilter(request, response);
-            } else {
+            }
+            else {
                 httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
             }
 

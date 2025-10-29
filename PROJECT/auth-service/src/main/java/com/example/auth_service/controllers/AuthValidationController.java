@@ -51,8 +51,11 @@ public class AuthValidationController {
                 return ResponseEntity.ok(Map.of(
                         "valid", true,
                         "username", user.getUsername(),
-                        "roles", user.getAuthorities()
+                        "roles", user.getAuthorities().stream()
+                                .map(a -> a.getAuthority())
+                                .toList()
                 ));
+
             }
 
             return ResponseEntity.status(401).body(Map.of("valid", false));
