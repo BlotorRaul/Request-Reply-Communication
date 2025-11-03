@@ -4,7 +4,9 @@ import com.example.device_service.dtos.UserLocalDTO;
 import com.example.device_service.entities.UserLocal;
 import com.example.device_service.mappers.UserLocalMapper;
 import com.example.device_service.repositories.UserLocalRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +30,7 @@ public class UserLocalService {
 
     public UserLocalDTO getUserById(UUID id) {
         UserLocal user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
         return UserLocalMapper.toDTO(user);
     }
 
@@ -39,7 +41,7 @@ public class UserLocalService {
 
     public UserLocalDTO updateUser(UUID id, UserLocalDTO dto) {
         UserLocal user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
 
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
@@ -52,10 +54,10 @@ public class UserLocalService {
         repository.deleteById(id);
     }
 
-    // “Simulare” propagare manuala a stergerii din user-service
+    // "Simulare" propagare manuala a stergerii din user-service
     public void deactivateUser(UUID id) {
         UserLocal user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
 
         user.setActive(false);
         repository.save(user);
