@@ -11,13 +11,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Component
-public class RemoteBasicAuthFilter implements Filter {
+public class RemoteJwtAuthFilter implements Filter {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -30,11 +28,10 @@ public class RemoteBasicAuthFilter implements Filter {
 
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpRes = (HttpServletResponse) response;
-
         String authHeader = httpReq.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Basic ")) {
-            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing JWT token");
             return;
         }
 
@@ -43,45 +40,32 @@ public class RemoteBasicAuthFilter implements Filter {
             headers.set("Authorization", authHeader);
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            // Verificam userul in auth-service
             ResponseEntity<Map> resp = restTemplate.exchange(
-                    authServiceUrl + "/api/auth/validate-basic", // adresa auth-service
+                    authServiceUrl + "/api/auth/users/validate-jwt",
                     HttpMethod.POST,
                     entity,
                     Map.class
             );
 
-            if (resp.getStatusCode().is2xxSuccessful() && Boolean.TRUE.equals(resp.getBody().get("valid"))) {
 
-                String username = (String) resp.getBody().get("username");
-
-                //  Extragem lista reala de roluri din auth-service
-                Object rolesObj = resp.getBody().get("roles");
-                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-
-                if (rolesObj instanceof List<?> rolesList) {
-                    for (Object r : rolesList) {
-                        authorities.add(new SimpleGrantedAuthority(r.toString()));
-                    }
-                } else if (rolesObj != null) {
-                    authorities.add(new SimpleGrantedAuthority(rolesObj.toString()));
-                } else {
-                    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-                }
+            Map<String, Object> body = resp.getBody();
+            if (body != null && Boolean.TRUE.equals(body.get("valid"))) {
+                // Extragem detalii din token (ideal: email, role)
+                String username = (String) body.get("username");
+                String role = (String) body.getOrDefault("role", "USER");
 
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                        new UsernamePasswordAuthenticationToken(
+                                username, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
                 chain.doFilter(request, response);
+            } else {
+                httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
             }
-            else {
-                httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
-            }
-
         } catch (Exception e) {
-            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
+            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT validation failed: " + e.getMessage());
         }
     }
 }

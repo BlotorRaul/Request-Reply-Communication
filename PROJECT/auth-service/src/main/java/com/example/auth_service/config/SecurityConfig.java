@@ -31,7 +31,7 @@ public class SecurityConfig {
     }
 
     /**
-     * ✅ Bean necesar pentru AuthValidationController
+     * Bean necesar pentru AuthValidationController
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -45,19 +45,20 @@ public class SecurityConfig {
 
         switch (authMode.toLowerCase()) {
             case "basic" -> {
-                System.out.println("🔐 BASIC Authentication ENABLED (DB-based)");
+                System.out.println("BASIC Authentication ENABLED (DB-based)");
                 http
                         .authorizeHttpRequests(auth -> auth
-                                // Permitem accesul la Swagger și la login/validate fără autentificare
+                                // Permitem accesul la Swagger si la login/validate fără autentificare
                                 .requestMatchers(
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
                                         "/swagger-ui.html",
                                         "/api/auth/users/login",
-                                        "/api/auth/validate-basic"
+                                        "/api/auth/validate-basic",
+                                        "/api/auth/users/mode"
                                 ).permitAll()
 
-                                // Orice alt request necesită autentificare
+                                // Orice alt request necesita autentificare
                                 .anyRequest().authenticated()
                         )
                         .userDetailsService(customUserDetailsService)
@@ -65,14 +66,16 @@ public class SecurityConfig {
             }
 
             case "jwt" -> {
-                System.out.println("🔑 JWT Authentication ENABLED");
+                System.out.println("JWT Authentication ENABLED");
                 http
                         .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
                                         "/swagger-ui.html",
-                                        "/api/auth/users/login"
+                                        "/api/auth/users/login",
+                                        "/api/auth/users/validate-jwt",
+                                        "/api/auth/users/mode"
                                 ).permitAll()
                                 .requestMatchers("/api/auth/users/test-user").hasRole("USER")
                                 .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
@@ -84,7 +87,7 @@ public class SecurityConfig {
             }
 
             default -> {
-                System.out.println("🚪 Authentication DISABLED (permitAll)");
+                System.out.println("Authentication DISABLED (permitAll)");
                 http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             }
         }

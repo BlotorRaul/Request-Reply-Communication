@@ -1,4 +1,4 @@
-package com.example.user_service.security;
+package com.example.device_service.security;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
@@ -11,13 +11,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Component
-public class RemoteBasicAuthFilter implements Filter {
+public class RemoteJwtAuthFilter implements Filter {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -30,58 +28,49 @@ public class RemoteBasicAuthFilter implements Filter {
 
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpRes = (HttpServletResponse) response;
-
         String authHeader = httpReq.getHeader("Authorization");
+        System.out.println("[RemoteJwtAuthFilter] Authorization header received: " + (authHeader == null ? "null" : (authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader)));
 
-        if (authHeader == null || !authHeader.startsWith("Basic ")) {
-            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing JWT token (JWT filter)");
             return;
         }
 
         try {
+            // ✅ Trimite tokenul către auth-service pentru validare
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", authHeader);
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            // Verificam userul in auth-service
             ResponseEntity<Map> resp = restTemplate.exchange(
-                    authServiceUrl + "/api/auth/validate-basic", // adresa auth-service
+                    authServiceUrl + "/api/auth/users/validate-jwt",
                     HttpMethod.POST,
                     entity,
                     Map.class
             );
 
-            if (resp.getStatusCode().is2xxSuccessful() && Boolean.TRUE.equals(resp.getBody().get("valid"))) {
+            Map<String, Object> body = resp.getBody();
+            if (body != null && Boolean.TRUE.equals(body.get("valid"))) {
+                String username = (String) body.get("username");
+                String role = (String) body.getOrDefault("role", "USER");
 
-                String username = (String) resp.getBody().get("username");
-
-                //  Extragem lista reala de roluri din auth-service
-                Object rolesObj = resp.getBody().get("roles");
-                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-
-                if (rolesObj instanceof List<?> rolesList) {
-                    for (Object r : rolesList) {
-                        authorities.add(new SimpleGrantedAuthority(r.toString()));
-                    }
-                } else if (rolesObj != null) {
-                    authorities.add(new SimpleGrantedAuthority(rolesObj.toString()));
-                } else {
-                    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-                }
-
+                // ✅ Creează contextul de autentificare
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
                 chain.doFilter(request, response);
-            }
-            else {
-                httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
+            } else {
+                httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
             }
 
         } catch (Exception e) {
-            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
+            e.printStackTrace();
+            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT validation failed: " + e.getMessage());
         }
     }
 }

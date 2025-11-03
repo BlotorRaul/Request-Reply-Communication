@@ -1,6 +1,6 @@
 entryPoints:
   web:
-    address: ":80"
+    address: ":8088"
 
 providers:
   file:

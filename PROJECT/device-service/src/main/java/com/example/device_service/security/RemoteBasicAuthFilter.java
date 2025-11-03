@@ -2,6 +2,7 @@ package com.example.device_service.security;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,6 +21,9 @@ public class RemoteBasicAuthFilter implements Filter {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Value("${AUTH_SERVICE_URL:http://localhost:8083}")
+    private String authServiceUrl;
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -28,9 +32,10 @@ public class RemoteBasicAuthFilter implements Filter {
         HttpServletResponse httpRes = (HttpServletResponse) response;
 
         String authHeader = httpReq.getHeader("Authorization");
+        System.out.println("[RemoteBasicAuthFilter] Authorization header received: " + (authHeader == null ? "null" : (authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader)));
 
         if (authHeader == null || !authHeader.startsWith("Basic ")) {
-            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header");
+            httpRes.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header (BASIC filter)");
             return;
         }
 
@@ -41,7 +46,7 @@ public class RemoteBasicAuthFilter implements Filter {
 
             // Trimite cererea la auth-service
             ResponseEntity<Map> resp = restTemplate.exchange(
-                    "http://localhost:8083/api/auth/validate-basic",
+                    authServiceUrl + "/api/auth/validate-basic",
                     HttpMethod.POST,
                     entity,
                     Map.class

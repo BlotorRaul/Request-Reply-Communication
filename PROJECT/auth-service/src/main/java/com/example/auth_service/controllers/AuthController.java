@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -168,6 +169,50 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * ✅ Validates a JWT token sent in the Authorization header (used by other microservices)
+     */
+    @PostMapping("/validate-jwt")
+    @Operation(
+            summary = "Validate JWT token (for inter-service communication)",
+            description = "Validates a JWT token sent via Authorization header and returns user details if valid."
+    )
+    public ResponseEntity<Map<String, Object>> validateJwt(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "valid", false,
+                        "message", "Missing or invalid Authorization header"
+                ));
+            }
+
+            String token = authHeader.substring(7);
+            boolean valid = jwtUtil.validateToken(token);
+
+            if (!valid) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "valid", false,
+                        "message", "Invalid or expired token"
+                ));
+            }
+
+            var claims = jwtUtil.extractAllClaims(token);
+            String username = jwtUtil.extractEmail(token);
+            String role = claims.get("role", String.class);
+
+            return ResponseEntity.ok(Map.of(
+                    "valid", true,
+                    "username", username,
+                    "role", role,
+                    "claims", claims
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of(
+                    "valid", false,
+                    "message", "Error validating token: " + e.getMessage()
+            ));
+        }
+    }
 
 
 
@@ -183,4 +228,14 @@ public class AuthController {
     public String testUserAccess() {
         return " Hello USER! You have access to this endpoint.";
     }
+
+
+    @Value("${auth.mode:default}")
+    private String authMode;
+
+    @GetMapping("/mode")
+    public Map<String, String> getAuthMode() {
+        return Map.of("mode", authMode);
+    }
+
 }

@@ -6,13 +6,14 @@ services:
     container_name: traefik
     restart: always
     ports:
-      - "80:80"      # HTTP requests
-      - "8080:8080"  # Dashboard (ui)
+      - "8088:8088"   # HTTP entrypoint (în loc de 80)
+      - "8090:8080"   # Dashboard Traefik (UI)
     volumes:
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./path.yml:/etc/traefik/path.yml:ro
     networks:
       - traefik-net
+
 
 networks:
   traefik-net:
