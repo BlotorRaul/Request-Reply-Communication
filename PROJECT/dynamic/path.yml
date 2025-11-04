@@ -1,0 +1,70 @@
+http:
+  routers:
+    # Frontend router - serve Angular app
+    frontend-router:
+      rule: "Host(`localhost`) && PathPrefix(`/`)"
+      entryPoints:
+        - web
+      service: frontend-service
+      priority: 1  # Lower priority - check after API routes
+
+    # Auth service router
+    auth-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/auth`)"
+      entryPoints:
+        - web
+      service: auth-service
+      priority: 10  # Higher priority than frontend
+
+    # User service router
+    user-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/users`)"
+      entryPoints:
+        - web
+      service: user-service
+      priority: 10  # Higher priority than frontend
+
+    # Device service router
+    device-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/devices`)"
+      entryPoints:
+        - web
+      service: device-service
+      priority: 10  # Higher priority than frontend
+
+    # User-local router (device-service endpoint)
+    userlocal-router:
+      rule: "Host(`localhost`) && PathPrefix(`/api/users-local`)"
+      entryPoints:
+        - web
+      service: device-service
+      priority: 10  # Higher priority than frontend
+
+  services:
+    # Frontend service (nginx)
+    frontend-service:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:80"
+
+    # Auth service
+    auth-service:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://auth-service:8083"
+
+    # User service
+    user-service:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://user-service:8081"
+
+    # Device service
+    device-service:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://device-service:8082"
+

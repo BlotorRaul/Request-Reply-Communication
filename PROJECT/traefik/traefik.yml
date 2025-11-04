@@ -1,12 +1,22 @@
 entryPoints:
   web:
-    address: ":8088"
+    address: ":80"
 
 providers:
   file:
-    filename: /etc/traefik/path.yml
+    filename: /etc/traefik/dynamic/path.yml
     watch: true
+  docker:
+    exposedByDefault: false
+    network: proxy-network
 
 api:
   dashboard: true
   insecure: true
+
+log:
+  level: INFO
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: common
