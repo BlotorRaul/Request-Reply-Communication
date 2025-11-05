@@ -80,6 +80,8 @@ services:
       context: ./auth-service
       dockerfile: Dockerfile
     container_name: auth-service
+    ports:
+      - "8083:8083"  # Exposed for direct Swagger access: http://localhost:8083/swagger-ui.html
     environment:
       PORT: 8083
       DB_IP: postgres-auth
@@ -106,6 +108,8 @@ services:
       context: ./user-service
       dockerfile: Dockerfile
     container_name: user-service
+    ports:
+      - "8081:8081"  # Exposed for direct Swagger access: http://localhost:8081/swagger-ui.html
     environment:
       PORT: 8081
       DB_IP: postgres-user
@@ -141,6 +145,8 @@ services:
       context: ./device-service
       dockerfile: Dockerfile
     container_name: device-service
+    ports:
+      - "8082:8082"  # Exposed for direct Swagger access: http://localhost:8082/swagger-ui.html
     environment:
       PORT: 8082
       DB_IP: postgres-device
