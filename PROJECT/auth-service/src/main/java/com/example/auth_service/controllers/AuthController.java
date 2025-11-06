@@ -170,7 +170,7 @@ public class AuthController {
     }
 
     /**
-     * ✅ Validates a JWT token sent in the Authorization header (used by other microservices)
+     *  Validates a JWT token sent in the Authorization header (used by other microservices)
      */
     @PostMapping("/validate-jwt")
     @Operation(

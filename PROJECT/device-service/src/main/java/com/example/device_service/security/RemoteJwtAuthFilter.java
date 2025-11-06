@@ -28,6 +28,14 @@ public class RemoteJwtAuthFilter implements Filter {
 
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpRes = (HttpServletResponse) response;
+        
+        // Permitem cererile pentru Swagger fara autentificare
+        String path = httpReq.getRequestURI();
+        if (path != null && (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs"))) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
         String authHeader = httpReq.getHeader("Authorization");
         System.out.println("[RemoteJwtAuthFilter] Authorization header received: " + (authHeader == null ? "null" : (authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader)));
 
@@ -37,7 +45,7 @@ public class RemoteJwtAuthFilter implements Filter {
         }
 
         try {
-            // ✅ Trimite tokenul către auth-service pentru validare
+            // Trimite tokenul catre auth-service pentru validare
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", authHeader);
             HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -54,7 +62,7 @@ public class RemoteJwtAuthFilter implements Filter {
                 String username = (String) body.get("username");
                 String role = (String) body.getOrDefault("role", "USER");
 
-                // ✅ Creează contextul de autentificare
+                // Creeaza contextul de autentificare
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 username,

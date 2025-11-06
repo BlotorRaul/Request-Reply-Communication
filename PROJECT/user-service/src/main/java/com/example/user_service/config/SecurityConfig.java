@@ -29,22 +29,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         String mode = modeProvider.getAuthMode();
-        System.out.println("🔐 Auth mode detected: " + mode.toUpperCase());
+        System.out.println("Auth mode detected: " + mode.toUpperCase());
 
         http.csrf(csrf -> csrf.disable());
 
-        // Dacă modul e DEFAULT, permitem totul și nu adăugăm filtre
+        // Dacă modul e DEFAULT, permitem totul si nu adaugam filtre
         if (mode.equalsIgnoreCase("default")) {
-            System.out.println("⚠️ Authentication disabled (default mode)");
+            System.out.println("Authentication disabled (default mode)");
             http.authorizeHttpRequests(auth -> auth
                     .anyRequest().permitAll()
             );
             return http.build();
         }
 
-        // Configurăm regulile pentru BASIC și JWT
+        // Configuram regulile pentru BASIC și JWT
         http.authorizeHttpRequests(auth -> auth
-                // Permitem accesul complet la Swagger fără restricții de rol
+                // Permitem accesul complet la Swagger fara restrictii de rol
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/**").hasRole("ADMIN")
@@ -53,12 +53,12 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
         );
 
-        // Alegem filtrul potrivit în funcție de modul
+        // Alegem filtrul potrivit în functie de modul
         if (mode.equalsIgnoreCase("jwt")) {
-            System.out.println("✅ Using JWT authentication");
+            System.out.println("Using JWT authentication");
             http.addFilterBefore(jwtFilter, BasicAuthenticationFilter.class);
         } else if (mode.equalsIgnoreCase("basic")) {
-            System.out.println("✅ Using Basic authentication");
+            System.out.println("Using Basic authentication");
             http.addFilterBefore(basicFilter, BasicAuthenticationFilter.class);
         }
 

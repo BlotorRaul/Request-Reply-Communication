@@ -11,7 +11,7 @@ public class RemoteAuthModeProvider {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // poți suprascrie din environment: AUTH_SERVICE_URL=http://auth-service:8083
+    // poti suprascrie din environment: AUTH_SERVICE_URL=http://auth-service:8083
     @Value("${AUTH_SERVICE_URL:http://localhost:8083}")
     private String authServiceUrl;
 
@@ -21,7 +21,7 @@ public class RemoteAuthModeProvider {
             Map<String, String> response = restTemplate.getForObject(url, Map.class);
             return response.getOrDefault("mode", "default").toLowerCase();
         } catch (Exception e) {
-            System.err.println("⚠️ Could not fetch auth mode from auth-service (" + e.getMessage() + "). Defaulting to 'default'");
+            System.err.println("Could not fetch auth mode from auth-service (" + e.getMessage() + "). Defaulting to 'default'");
             return "default";
         }
     }

@@ -63,7 +63,7 @@ public class JwtUtil {
     }
 
     /**
-     * Extrage o informație generică (claim) din token
+     * Extrage o informatie generica (claim) din token
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);

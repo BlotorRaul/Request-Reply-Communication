@@ -30,6 +30,13 @@ public class RemoteBasicAuthFilter implements Filter {
 
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpRes = (HttpServletResponse) response;
+        
+        // Permitem cererile pentru Swagger fără autentificare
+        String path = httpReq.getRequestURI();
+        if (path != null && (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs"))) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         String authHeader = httpReq.getHeader("Authorization");
 

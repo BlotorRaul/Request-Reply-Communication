@@ -16,12 +16,11 @@ public class RemoteAuthModeProvider {
 
     public String getAuthMode() {
         try {
-            // ✅ URL corect (include /users)
             String url = authServiceUrl + "/api/auth/users/mode";
             Map<String, String> response = restTemplate.getForObject(url, Map.class);
             return response.getOrDefault("mode", "default").toLowerCase();
         } catch (Exception e) {
-            System.err.println("⚠️ Could not fetch auth mode from auth-service (" + e.getMessage() + "). Defaulting to 'default'");
+            System.err.println("Could not fetch auth mode from auth-service (" + e.getMessage() + "). Defaulting to 'default'");
             return "default";
         }
     }
